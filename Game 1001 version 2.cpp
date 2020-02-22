@@ -1,22 +1,29 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
-#include <time.h>
+#include <ctime>
 #include <fstream>
 
 using namespace std;
 
-char getUsersChoice();
-char getCompChoice();
-char pickWinner(char, char);
+string getUsername(); //asks player for username, only returns if its valid
+char getUsersChoice(); //gets user's move, returns it as a char
+char getCompChoice(); //randomly picks a char for the computer's move
+char pickWinner(char, char, string); //compares both chars in a switch statement and picks the winner. returns a char to figure out how to assign points
 
 int main()
 {
 	bool GameIsRunning = true;
+	char name[256];
 	char user_choice;
 	char comp_choice;
-	char input;
 	char result;
+
+	string password;
+	string input;
+
+	ofstream saveFile;
+	ifstream readFile;
 
 	int wins = 0;
 	int ties = 0;
@@ -24,37 +31,34 @@ int main()
 
 	srand(time(0));
 
-	//bool validUsername, validPassword = false;
-	//string userInput;
-	//const int NAME_MIN_LENGTH = 8;
-	//
-	//do //get username, check if it exists and ask for password, or make a new user
-	//{
-	//	do //make sure the username is a valid length
-	//	{
-	//		cout << "\nPlease enter a username. (must be at least 8 characters long): ";
-	//		cin >> userInput;
-	//
-	//		if (userInput.length() < NAME_MIN_LENGTH) 
-	//		{
-	//			cout << "\nUsername is too short, please try again" << endl;
-	//			validUsername = false;
-	//		}
-	//		else
-	//			validUsername = true;
-	//	} while (validUsername == false);
+	string username = getUsername();
 
-	//	//check if user name doesnt exist
-	//		//if so have them create a password, then create a new user and set validPassword = true
-	//		//else have them enter a password in a do while loop
-	//			//check if the password is correct, loop until it is, or let them return to the earlier menu with a break if they type back
+	readFile.open(username + ".txt");
 
-	//} while (validPassword == false);
-
-	//ask the player if they wanna play against a computer or another person
+	if (!readFile.is_open())
+	{
+		saveFile.open(username + ".txt");
+		cout << "\nPlease create a password\n";
+		cin >> input;
+		saveFile << input << endl;
+		password = input;
+	}
+	else
+	{
+		readFile >> password >> wins >> ties >> losses;
+		cout << "\nPlease enter your password: ";
+		cin >> input;
+	}
+	
+	while(input != password)
+	{
+		cout << "\nOops, incorrect password\nPlease try again: ";
+		cin >> input;
+	} 
 
 	while (GameIsRunning)
 	{
+		system("cls");
 		//user's move
 		user_choice = getUsersChoice();
 
@@ -62,7 +66,7 @@ int main()
 		comp_choice = getCompChoice();
 
 		// declare a winner
-		result = pickWinner(user_choice, comp_choice);
+		result = pickWinner(user_choice, comp_choice, username);
 
 		switch (result)
 		{
@@ -80,65 +84,78 @@ int main()
 		cout << "Wins:    " << wins << endl;
 		cout << "Ties:    " << ties << endl;
 		cout << "Losses:  " << losses << endl;
+		
+		saveFile.open(username + ".txt");
+		
+		saveFile << password << endl << wins << endl << ties << endl << losses << endl;
 
 		// suggest  user  play another round. any input besides "y", or "Y" will break out of the loop. 
 		cout << endl << "Enter Y to Play Again" << endl;
 		cin >> input;
 
-		if (toupper(input) != 'Y')
+		if (input != "y" && input != "Y")
 			GameIsRunning = false;
-
-		system("cls");
 	}
+	readFile.close();
+	saveFile.close();
 	// main function return
 	return 0;
 
 }
 
 //functions
-char pickWinner(char user_move, char comp_move)
+string getUsername()
+{
+	string userInput;
+	const int NAME_MIN_LENGTH = 8;
+
+	cout << "\nPlease enter a username. (must be at least 8 characters long): ";
+	cin >> userInput;
+	while (userInput.length() < NAME_MIN_LENGTH)
+	{
+		cout << "\nUsername is too short, please try again" << endl;
+		cin >> userInput;
+	}
+	return userInput;
+}
+
+char pickWinner(char user_move, char comp_move, string user)
 {
 	switch (user_move) {
 	case 'r':
 		switch (comp_move) {
 		case 'r':
-			cout << "User: Rock" << endl;
-			cout << "Computer: Rock" << endl;
-			cout << endl;
+			cout << user <<": Rock" << endl;
+			cout << "Computer: Rock" << endl << endl;
 			cout << "It's a tie!" << endl;
 			return 't';
 		case 'p':
-			cout << "User: Rock" << endl;
-			cout << "Computer: Paper" << endl;
-			cout << endl;
+			cout << user << ": Rock" << endl;
+			cout << "Computer: Paper" << endl << endl;
 			cout << "Computer Wins! Paper Beats Rock!" << endl;
 			return 'l';
 		case 's':
-			cout << "User: Rock" << endl;
-			cout << "Computer: Scissor" << endl;
-			cout << endl;
-			cout << "User Wins! Rock Beats Scissors!" << endl;
+			cout << user << ": Rock" << endl;
+			cout << "Computer: Scissor" << endl << endl;
+			cout << user << " Wins! Rock Beats Scissors!" << endl;
 			return 'w';
 		}
 		break;
 	case 'p':
 		switch (comp_move) {
 		case 'r':
-			cout << "User: Paper" << endl;
-			cout << "Computer: Rock" << endl;
-			cout << endl;
-			cout << "User Wins! Paper Beats Rock!" << endl;
+			cout << user << ": Paper" << endl;
+			cout << "Computer: Rock" << endl << endl;
+			cout << user << " Wins! Paper Beats Rock!" << endl;
 			return 'w';
 		case 'p':
-			cout << "User: Paper" << endl;
-			cout << "Computer: Paper" << endl;
-			cout << endl;
+			cout << user << ": Paper" << endl;
+			cout << "Computer: Paper" << endl << endl;
 			cout << "It's a tie!" << endl;
 			return 't';
 		case 's':
-			cout << "User: Paper" << endl;
-			cout << "Computer: Scissors" << endl;
-			cout << endl;
+			cout << user << ": Paper" << endl;
+			cout << "Computer: Scissors" << endl << endl;
 			cout << "Computer Wins! Scissors Beats Paper!" << endl;
 			return 'l';
 		}
@@ -146,28 +163,23 @@ char pickWinner(char user_move, char comp_move)
 	case 's':
 		switch (comp_move) {
 		case 'r':
-			cout << "User: Scissors" << endl;
-			cout << "Computer: Rock" << endl;
-			cout << endl;
+			cout << user << ": Scissors" << endl;
+			cout << "Computer: Rock" << endl << endl;
 			cout << "Computer Wins! Rock Beats Scissors!" << endl;
 			return 'l';
 		case 'p':
-			cout << "User: Scissors" << endl;
-			cout << "Computer: Paper" << endl;
-			cout << endl;
-			cout << "User Wins! Scissors Beats Paper!" << endl;
+			cout << user << ": Scissors" << endl;
+			cout << "Computer: Paper" << endl << endl;
+			cout << user << " Wins! Scissors Beats Paper!" << endl;
 			return 'w';
 		case 's':
-			cout << "User: Scissors" << endl;
-			cout << "Computer: Scissors" << endl;
-			cout << endl;
+			cout << user << ": Scissors" << endl;
+			cout << "Computer: Scissors" << endl << endl;
 			cout << "It's a tie!" << endl;
 			return 't';
 		}
 	default:
 		cout << "Invalid move. No score" << endl;
-		break;
-
 	}
 }
 
